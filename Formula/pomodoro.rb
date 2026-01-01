@@ -14,13 +14,17 @@ class Pomodoro < Formula
     requirements = buildpath/"requirements.txt"
     system python3, "-m", "pip", "install", "--prefix=#{libexec}", "-r", requirements
     
-    # Install the script
-    bin.install "pomodoro.py" => "pomodoro"
-    chmod 0755, bin/"pomodoro"
+    # Create wrapper script
+    (bin/"pomodoro").write <<~EOS
+      #!/bin/bash
+      export PYTHONPATH="#{libexec}/lib/python3.11/site-packages:$PYTHONPATH"
+      exec #{python3} "#{libexec}/bin/pomodoro" "$@"
+    EOS
     
-    # Create a wrapper script that uses the installed Python packages
-    (bin/"pomodoro").write_env_script bin/"pomodoro", 
-      PYTHONPATH: "#{libexec}/lib/python3.11/site-packages:$PYTHONPATH"
+    # Install the actual script to libexec
+    libexec.install "pomodoro.py" => "pomodoro"
+    chmod 0755, libexec/"pomodoro"
+    chmod 0755, bin/"pomodoro"
   end
 
   test do
