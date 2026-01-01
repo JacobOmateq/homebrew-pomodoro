@@ -9,18 +9,18 @@ class Pomodoro < Formula
 
   def install
     python3 = Formula["python@3.11"].opt_bin/"python3.11"
-    venv = virtualenv_create(libexec, python3)
     
     # Install dependencies from requirements.txt
     requirements = buildpath/"requirements.txt"
-    venv.pip_install requirements
+    system python3, "-m", "pip", "install", "--prefix=#{libexec}", "-r", requirements
     
     # Install the script
     bin.install "pomodoro.py" => "pomodoro"
     chmod 0755, bin/"pomodoro"
     
-    # Create a wrapper script that uses the virtualenv
-    bin.env_script_all_files(libexec/"bin", :PATH => "#{libexec}/bin:$PATH")
+    # Create a wrapper script that uses the installed Python packages
+    (bin/"pomodoro").write_env_script bin/"pomodoro", 
+      PYTHONPATH: "#{libexec}/lib/python3.11/site-packages:$PYTHONPATH"
   end
 
   test do
